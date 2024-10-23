@@ -4,6 +4,7 @@ from __future__ import print_function
 __version__ = '2.7.4'
 
 """
+2.7.5: Fix #59
 2.7.4: Fix #46 KeyError: u'resolved_title'
 2.7.3: Replace tld with standard Python way (not as good as tld but works without extra package) if SECTIONS_BY_DOMAIN_USING_TLD = False
 2.7.2: Change default MAX_ARTICLES to 30
@@ -40,7 +41,7 @@ __version__ = '2.7.4'
 
 **ARCHIVE_DOWNLOADED** (True or False) do you want to archive articles after fetching 
 
-**MAX_ARTICLES** (number) how many articles do you want to fetch in total
+**MAX_ARTICLES** (number) how many articles do you want to fetch in total. Pocket seems to reject values too high, 1000 seems to work OK.
 
 **SORT_METHOD** ('oldest' or 'newest') way how the articles are sorted
 
@@ -282,7 +283,7 @@ class Pocket(BasicNewsRecipe):
                                                 '"sort":"{4}"' '}}').format(
                                                 self.consumer_key,
                                                 self.config.token,
-                                                self.max_articles * 1000,  # something "unlimited"
+                                                self.max_articles,
                                                 int(time()) - 86400 * self.oldest_article,
                                                 self.sort_method, 
                                                 self.to_pull,
