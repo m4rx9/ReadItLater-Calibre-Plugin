@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # vim:ft=python tabstop=8 expandtab shiftwidth=4 softtabstop=4
 from __future__ import print_function
-__version__ = '2.7.5'
+__version__ = '2.7.6'
 
 """
+2.7.6: Fix #60 Untagged articles do not get included
 2.7.5: Fix #59
 2.7.4: Fix #46 KeyError: u'resolved_title'
 2.7.3: Replace tld with standard Python way (not as good as tld but works without extra package) if SECTIONS_BY_DOMAIN_USING_TLD = False
@@ -61,7 +62,7 @@ TAGS_EXCEPTIONS = [] # [] or ['tag3', 'tag4']
 URL_KEYWORD_EXCEPTIONS = [] # [] or ['keyword1', 'keyword2']
 SECTIONS_BY_DOMAIN = False
 INCLUDE_UNTAGGED = True
-ARCHIVE_DOWNLOADED = True
+ARCHIVE_DOWNLOADED = False
 MAX_ARTICLES = 1000
 OLDEST_ARTICLE = 365
 SORT_METHOD = 'newest'
@@ -329,19 +330,18 @@ class Pocket(BasicNewsRecipe):
                                     section_dict[domain].append(item)
                         else:
                             # the keys of section_dict will be tags
-                            try:
-                                tag = list(response['list'][item]['tags'].keys())
-                            except KeyError:
+                            article_tags = list(response['list'][item]['tags'].keys())
+                            if (len(article_tags) == 0):
                                 if INCLUDE_UNTAGGED:
-                                    tag = ['Untagged']
+                                    article_tags = ['Untagged']
                                 else:
-                                    tag = None
+                                    article_tags = None
 
                             # tag could be None if article untagged and INCLUDE_UNTAGGED=False
-                            if tag and not any(tagcheck in TAGS_EXCEPTIONS for tagcheck in tag):
+                            if article_tags and not any(tagcheck in TAGS_EXCEPTIONS for tagcheck in article_tags):
                                 if (len(TAGS) == 0):
                                     #autotags enabled, insert tag and item
-                                    for tagcheck in tag:
+                                    for tagcheck in article_tags:
                                         if tagcheck not in section_dict:
                                             section_dict[tagcheck] = [item]
                                         else:
@@ -350,7 +350,7 @@ class Pocket(BasicNewsRecipe):
                                     # explicit tags, check that
                                     # the tag belongs to the explicit array TAGS
                                     # OR is is an untagged article and INCLUDE_UNTAGGED=True
-                                    for tagcheck in tag:
+                                    for tagcheck in article_tags:
                                         if tagcheck in TAGS or (tagcheck == 'Untagged' and INCLUDE_UNTAGGED):
                                             if tagcheck not in section_dict:
                                                 section_dict[tagcheck] = [item]
