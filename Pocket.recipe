@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # vim:ft=python tabstop=8 expandtab shiftwidth=4 softtabstop=4
 from __future__ import print_function
-__version__ = '2.7.6'
+__version__ = '2.7.7'
 
 """
+2.7.7: Fix #63 #62
 2.7.6: Fix #60 Untagged articles do not get included
 2.7.5: Fix #59
 2.7.4: Fix #46 KeyError: u'resolved_title'
@@ -330,8 +331,11 @@ class Pocket(BasicNewsRecipe):
                                     section_dict[domain].append(item)
                         else:
                             # the keys of section_dict will be tags
-                            article_tags = list(response['list'][item]['tags'].keys())
-                            if (len(article_tags) == 0):
+                            article_tags = response['list'][item].get('tags')
+
+                            if article_tags: #this test True if the dict is not empty
+                                article_tags = list(article_tags.keys())
+                            else:
                                 if INCLUDE_UNTAGGED:
                                     article_tags = ['Untagged']
                                 else:
